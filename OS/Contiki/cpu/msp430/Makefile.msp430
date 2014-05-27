@@ -42,10 +42,9 @@ BSL      = msp430-bsl
 ifdef WERROR
 CFLAGSWERROR=-Werror
 endif
-CFLAGSNO = -Wall -mmcu=$(MCU) -g $(CFLAGSWERROR)
+CFLAGSNO = -Wall -mmcu=$(MCU) $(CFLAGSWERROR)
 CFLAGS  += $(CFLAGSNO)
 CFLAGS  += -Os -fno-strict-aliasing
-
 
 
 # GCC Uniarch compatibility
