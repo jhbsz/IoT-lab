@@ -30,6 +30,7 @@
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
+//#include "leds.h"
 
 #include <string.h>
 
@@ -48,76 +49,87 @@ AUTOSTART_PROCESSES(&udp_server_process);
 static void
 tcpip_handler(void)
 {
-  static int seq_id;
-  char buf[MAX_PAYLOAD_LEN];
+	static int seq_id;
+	char buf[MAX_PAYLOAD_LEN];
 
-  if(uip_newdata()) {
-    ((char *)uip_appdata)[uip_datalen()] = 0;
-    PRINTF("Server received: '%s' from ", (char *)uip_appdata);
-    PRINT6ADDR(&UDP_IP_BUF->srcipaddr);
-    PRINTF("\n");
+	if(uip_newdata()) {
+		((char *)uip_appdata)[uip_datalen()] = 0;
+		PRINTF("Server received: '%s' from ", (char *)uip_appdata);
+		PRINT6ADDR(&UDP_IP_BUF->srcipaddr);
+		PRINTF("\n");
 
-    uip_ipaddr_copy(&server_conn->ripaddr, &UDP_IP_BUF->srcipaddr);
-    server_conn->rport = UDP_IP_BUF->srcport;
+		uip_ipaddr_copy(&server_conn->ripaddr, &UDP_IP_BUF->srcipaddr);
+		server_conn->rport = UDP_IP_BUF->srcport;
 
 
 
-    PRINTF("Responding with message: ");
-    sprintf(buf, "Hello from the server! (%d)", ++seq_id);
-    PRINTF("%s\n", buf);
+		PRINTF("Responding with message: ");
+		sprintf(buf, "Hello from the server! (%d)", ++seq_id);
+		PRINTF("%s\n", buf);
 
-    uip_udp_packet_send(server_conn, buf, strlen(buf));
-    /* Restore server connection to allow data from any node */
-    memset(&server_conn->ripaddr, 0, sizeof(server_conn->ripaddr));
-    server_conn->rport = 0;
-  }
+		uip_udp_packet_send(server_conn, buf, strlen(buf));
+		/* Restore server connection to allow data from any node */
+		memset(&server_conn->ripaddr, 0, sizeof(server_conn->ripaddr));
+		server_conn->rport = 0;
+	}
 }
 /*---------------------------------------------------------------------------*/
 static void
 print_local_addresses(void)
 {
-  int i;
-  uint8_t state;
+	int i;
+	uint8_t state;
 
-  PRINTF("Server IPv6 addresses: ");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTF("\n");
-    }
-  }
+	PRINTF("Server IPv6 addresses: ");
+	for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+		state = uip_ds6_if.addr_list[i].state;
+		if(uip_ds6_if.addr_list[i].isused &&
+				(state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+			PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
+			PRINTF("\n");
+		}
+	}
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(udp_server_process, ev, data)
 {
-  static struct etimer timer;
+	static struct etimer timer;
 
+	PROCESS_BEGIN();
+	PRINTF("UDP server started\n");
 
-  PROCESS_BEGIN();
-  PRINTF("UDP server started\n");
+	//	while (1)
+	//	{
+	//		// we set the timer from here every time
+	//		etimer_set(&timer, CLOCK_CONF_SECOND);
+	//
+	//		// and wait until the vent we receive is the one we're waiting for
+	//		PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_TIMER);
+	//
+	//		// update the LEDs
+	//		leds_toggle(1);
+	//	}
 
-  // wait 3 second, in order to have the IP addresses well configured
-  etimer_set(&timer, CLOCK_CONF_SECOND*5);
+	// wait 3 second, in order to have the IP addresses well configured
+	  etimer_set(&timer, CLOCK_CONF_SECOND*5);
 
-  // wait until the timer has expired
-  PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_TIMER);
+	  // wait until the timer has expired
+	  PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_TIMER);
 
-  print_local_addresses();
+	print_local_addresses();
 
-  server_conn = udp_new(NULL, UIP_HTONS(0), NULL);
-  udp_bind(server_conn, UIP_HTONS(3000));
+	server_conn = udp_new(NULL, UIP_HTONS(0), NULL);
+	udp_bind(server_conn, UIP_HTONS(3000));
 
-  PRINTF("Server listening on UDP port %u\n", UIP_HTONS(server_conn->lport));
+	PRINTF("Server listening on UDP port %u\n", UIP_HTONS(server_conn->lport));
 
-  while(1) {
-    PROCESS_YIELD();
-    if(ev == tcpip_event) {
-      tcpip_handler();
-    }
-  }
+	while(1) {
+		PROCESS_YIELD();
+		if(ev == tcpip_event) {
+			tcpip_handler();
+		}
+	}
 
-  PROCESS_END();
+	PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/

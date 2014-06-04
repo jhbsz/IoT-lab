@@ -49,43 +49,43 @@ AUTOSTART_PROCESSES(&udp_client_process);
 static void
 tcpip_handler(void)
 {
-  char *str;
+	char *str;
 
-  if(uip_newdata()) {
-    str = uip_appdata;
-    str[uip_datalen()] = '\0';
-    printf("Response from the server: '%s'\n", str);
-  }
+	if(uip_newdata()) {
+		str = uip_appdata;
+		str[uip_datalen()] = '\0';
+		printf("Response from the server: '%s'\n", str);
+	}
 }
 /*---------------------------------------------------------------------------*/
 static void
 timeout_handler(void)
 {
-  static int seq_id;
-  char buf[MAX_PAYLOAD_LEN];
+	static int seq_id;
+	char buf[MAX_PAYLOAD_LEN];
 
-  printf("Client sending to: ");
-  PRINT6ADDR(&client_conn->ripaddr);
-  sprintf(buf, "Hello %d from the client", ++seq_id);
-  printf(" (msg: %s)\n", buf);
-  uip_udp_packet_send(client_conn, buf, strlen(buf));
+	printf("Client sending to: ");
+	PRINT6ADDR(&client_conn->ripaddr);
+	sprintf(buf, "Hello %d from the client", ++seq_id);
+	printf(" (msg: %s)\n", buf);
+	uip_udp_packet_send(client_conn, buf, strlen(buf));
 }
 /*---------------------------------------------------------------------------*/
 static void
 print_local_addresses(void)
 {
-  int i;
-  uint8_t state;
+	int i;
+	uint8_t state;
 
-  PRINTF("Client IPv6 addresses: ");
-  for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
-    state = uip_ds6_if.addr_list[i].state;
-    if(uip_ds6_if.addr_list[i].isused &&
-       (state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
-      PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
-      PRINTF("\n");
-    }
-  }
+	PRINTF("Client IPv6 addresses: ");
+	for(i = 0; i < UIP_DS6_ADDR_NB; i++) {
+		state = uip_ds6_if.addr_list[i].state;
+		if(uip_ds6_if.addr_list[i].isused &&
+				(state == ADDR_TENTATIVE || state == ADDR_PREFERRED)) {
+			PRINT6ADDR(&uip_ds6_if.addr_list[i].ipaddr);
+			PRINTF("\n");
+		}
+	}
 }
 /*---------------------------------------------------------------------------*/
 static void
@@ -94,47 +94,47 @@ set_connection_address(uip_ipaddr_t *ipaddr)
 #define _QUOTEME(x) #x
 #define QUOTEME(x) _QUOTEME(x)
 #ifdef UDP_CONNECTION_ADDR
-  if(uiplib_ipaddrconv(QUOTEME(UDP_CONNECTION_ADDR), ipaddr) == 0) {
-    PRINTF("UDP client failed to parse address '%s'\n", QUOTEME(UDP_CONNECTION_ADDR));
-  }
+	if(uiplib_ipaddrconv(QUOTEME(UDP_CONNECTION_ADDR), ipaddr) == 0) {
+		PRINTF("UDP client failed to parse address '%s'\n", QUOTEME(UDP_CONNECTION_ADDR));
+	}
 #else
-  uip_ip6addr(ipaddr, 0xfe80, 0x0000, 0x0000, 0x0000, 0x6500, 0x0012, 0x91c3, 0x2501);
+	uip_ip6addr(ipaddr, 0xfe80, 0x0000, 0x0000, 0x0000, 0x6500, 0x0012, 0x91c3, 0x2501);
 
 #endif /* UDP_CONNECTION_ADDR */
 }
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(udp_client_process, ev, data)
 {
-  static struct etimer et;
-  uip_ipaddr_t ipaddr;
+	static struct etimer et;
+	uip_ipaddr_t ipaddr;
 
-  PROCESS_BEGIN();
-  PRINTF("UDP client process started\n");
+	PROCESS_BEGIN();
+	PRINTF("UDP client process started\n");
 
-  print_local_addresses();
+	print_local_addresses();
 
-  set_connection_address(&ipaddr);
+	set_connection_address(&ipaddr);
 
-  /* new connection with remote host */
-  client_conn = udp_new(&ipaddr, UIP_HTONS(3000), NULL);
-  udp_bind(client_conn, UIP_HTONS(3001));
+	/* new connection with remote host */
+	client_conn = udp_new(&ipaddr, UIP_HTONS(3000), NULL);
+	udp_bind(client_conn, UIP_HTONS(3001));
 
-  PRINTF("Created a connection with the server ");
-  PRINT6ADDR(&client_conn->ripaddr);
-  PRINTF(" local/remote port %u/%u\n",
-	UIP_HTONS(client_conn->lport), UIP_HTONS(client_conn->rport));
+	PRINTF("Created a connection with the server ");
+	PRINT6ADDR(&client_conn->ripaddr);
+	PRINTF(" local/remote port %u/%u\n",
+			UIP_HTONS(client_conn->lport), UIP_HTONS(client_conn->rport));
 
-  etimer_set(&et, SEND_INTERVAL);
-  while(1) {
-    PROCESS_YIELD();
-    if(etimer_expired(&et)) {
-      timeout_handler();
-      etimer_restart(&et);
-    } else if(ev == tcpip_event) {
-      tcpip_handler();
-    }
-  }
+	etimer_set(&et, SEND_INTERVAL);
+	while(1) {
+		PROCESS_YIELD();
+		if(etimer_expired(&et)) {
+			timeout_handler();
+			etimer_restart(&et);
+		} else if(ev == tcpip_event) {
+			tcpip_handler();
+		}
+	}
 
-  PROCESS_END();
+	PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/

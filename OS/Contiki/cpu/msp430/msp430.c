@@ -44,13 +44,13 @@
 void *
 w_memcpy(void *out, const void *in, size_t n)
 {
-  uint8_t *src, *dest;
-  src = (uint8_t *) in;
-  dest = (uint8_t *) out;
-  while(n-- > 0) {
-    *dest++ = *src++;
-  }
-  return out;
+	uint8_t *src, *dest;
+	src = (uint8_t *) in;
+	dest = (uint8_t *) out;
+	while(n-- > 0) {
+		*dest++ = *src++;
+	}
+	return out;
 }
 #endif /* __GNUC__ &&  __MSP430__ && MSP430_MEMCPY_WORKAROUND */
 /*---------------------------------------------------------------------------*/
@@ -58,28 +58,42 @@ w_memcpy(void *out, const void *in, size_t n)
 void *
 w_memset(void *out, int value, size_t n)
 {
-  uint8_t *dest;
-  dest = (uint8_t *) out;
-  while(n-- > 0) {
-    *dest++ = value & 0xff;
-  }
-  return out;
+	uint8_t *dest;
+	dest = (uint8_t *) out;
+	while(n-- > 0) {
+		*dest++ = value & 0xff;
+	}
+	return out;
 }
 #endif /* __GNUC__ &&  __MSP430__ && MSP430_MEMCPY_WORKAROUND */
 /*---------------------------------------------------------------------------*/
 void
 msp430_init_dco(void)
 {
-    DCOCTL  = 0;
-    BCSCTL1 = 0;
-    BCSCTL2 = SELM_2 | SELS ;
+	//    DCOCTL  = 0;
+	//    BCSCTL1 = 0;
+	//    BCSCTL2 = SELM_2 | SELS ;
+	//
+	//    int i;
+	//    do {
+	//    IFG1 &= ~OFIFG;                  /* Clear OSCFault flag  */
+	//    for (i = 0xff; i > 0; i--)       /* Time for flag to set */
+	//        nop();                        /*                      */
+	//    } while ((IFG1 & OFIFG) != 0);    /* OSCFault flag still set? */
 
-    int i;
-    do {
-    IFG1 &= ~OFIFG;                  /* Clear OSCFault flag  */
-    for (i = 0xff; i > 0; i--)       /* Time for flag to set */
-        nop();                        /*                      */
-    } while ((IFG1 & OFIFG) != 0);    /* OSCFault flag still set? */
+	uint16_t i;
+
+	DCOCTL = DCO0 | DCO1;	//set DCO frequency 1MHZ
+	BCSCTL1 = XT2OFF | RSEL0 | RSEL2;
+	BCSCTL2 = SELM_0 + 0x00;     // MCLK and SMCLK = internal DCOCLK
+
+	// Wait for xtal to stabilize
+	do {
+		IFG1 &= ~OFIFG;                // Clear oscillator fault flag
+		for (i = 0xFF; i > 0; i--);    // Time for flag to set
+	}
+	while ((IFG1 & OFIFG) != 0);     // Oscillator fault flag still set?
+
 
 }
 /*---------------------------------------------------------------------------*/
@@ -87,33 +101,33 @@ msp430_init_dco(void)
 static void
 init_ports(void)
 {
-    /* Turn everything off, device drivers enable what is needed. */
+	/* Turn everything off, device drivers enable what is needed. */
 
-    /* All configured for digital I/O */
-    P1SEL = 0;
-    P2SEL = 0;
-    P3SEL = 0;
-    P4SEL = 0;
-    P5SEL = 0;
-    P6SEL = 0;
+	/* All configured for digital I/O */
+	P1SEL = 0;
+	P2SEL = 0;
+	P3SEL = 0;
+	P4SEL = 0;
+	P5SEL = 0;
+	P6SEL = 0;
 
-    /* All inputs Except outputs*/
-    P1DIR = 0;
-    P1OUT = 0;
-    P2DIR = 0;
-    P2OUT = 0;
-    P3DIR = 0;
-    P3OUT = 0;
-    P4DIR = 0;
-    P4OUT = 0;
-    P5DIR = 0;
-    P5OUT = 0;
-    P6DIR = 0;
-    P6OUT = 0;
+	/* All inputs Except outputs*/
+	P1DIR = 0;
+	P1OUT = 0;
+	P2DIR = 0;
+	P2OUT = 0;
+	P3DIR = 0;
+	P3OUT = 0;
+	P4DIR = 0;
+	P4OUT = 0;
+	P5DIR = 0;
+	P5OUT = 0;
+	P6DIR = 0;
+	P6OUT = 0;
 
-    /* Disable Interrupts */
-    P1IE = 0;
-    P2IE = 0;
+	/* Disable Interrupts */
+	P1IE = 0;
+	P2IE = 0;
 }
 /*---------------------------------------------------------------------------*/
 /* msp430-ld may align _end incorrectly. Workaround in cpu_init. */
@@ -123,14 +137,14 @@ static char *cur_break = (char *)&_end;
 void
 msp430_cpu_init(void)
 {
-  dint();
-  watchdog_init();
-  init_ports();
-  msp430_init_dco();
-  eint();
-  if((uintptr_t)cur_break & 1) { /* Workaround for msp430-ld bug! */
-    cur_break++;
-  }
+	dint();
+	watchdog_init();
+	init_ports();
+	msp430_init_dco();
+	eint();
+	if((uintptr_t)cur_break & 1) { /* Workaround for msp430-ld bug! */
+		cur_break++;
+	}
 }
 /*---------------------------------------------------------------------------*/
 #define asmv(arg) __asm__ __volatile__(arg)
@@ -146,20 +160,20 @@ msp430_cpu_init(void)
 void *
 sbrk(int incr)
 {
-  char *stack_pointer;
+	char *stack_pointer;
 
-  asmv("mov r1, %0" : "=r" (stack_pointer));
-  stack_pointer -= STACK_EXTRA;
-  if(incr > (stack_pointer - cur_break))
-    return (void *)-1;		/* ENOMEM */
+	asmv("mov r1, %0" : "=r" (stack_pointer));
+	stack_pointer -= STACK_EXTRA;
+	if(incr > (stack_pointer - cur_break))
+		return (void *)-1;		/* ENOMEM */
 
-  void *old_break = cur_break;
-  cur_break += incr;
-  /*
-   * If the stack was never here then [old_break .. cur_break] should
-   * be filled with zeros.
-  */
-  return old_break;
+	void *old_break = cur_break;
+	cur_break += incr;
+	/*
+	 * If the stack was never here then [old_break .. cur_break] should
+	 * be filled with zeros.
+	 */
+	return old_break;
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -168,11 +182,11 @@ sbrk(int incr)
 int
 splhigh_(void)
 {
-  /* Clear the GIE (General Interrupt Enable) flag. */
-  int sr;
-  asmv("mov r2, %0" : "=r" (sr));
-  asmv("bic %0, r2" : : "i" (GIE));
-  return sr & GIE;		/* Ignore other sr bits. */
+	/* Clear the GIE (General Interrupt Enable) flag. */
+	int sr;
+	asmv("mov r2, %0" : "=r" (sr));
+	asmv("bic %0, r2" : : "i" (GIE));
+	return sr & GIE;		/* Ignore other sr bits. */
 }
 /*---------------------------------------------------------------------------*/
 /*
@@ -181,54 +195,54 @@ splhigh_(void)
 void
 splx_(int sr)
 {
-  /* If GIE was set, restore it. */
-  asmv("bis %0, r2" : : "r" (sr));
+	/* If GIE was set, restore it. */
+	asmv("bis %0, r2" : : "r" (sr));
 }
 /*---------------------------------------------------------------------------*/
 /* this code will always start the TimerB if not already started */
 void
 msp430_sync_dco(void) {
-  uint16_t last;
-  uint16_t diff;
-/*   uint32_t speed; */
-  /* DELTA_2 assumes an ACLK of 32768 Hz */
+	uint16_t last;
+	uint16_t diff;
+	/*   uint32_t speed; */
+	/* DELTA_2 assumes an ACLK of 32768 Hz */
 #define DELTA_2    ((MSP430_CPU_SPEED) / 32768)
 
-  /* Select SMCLK clock, and capture on ACLK for TBCCR6 */
-  TBCTL = TBSSEL1 | TBCLR;
-  TBCCTL6 = CCIS0 + CM0 + CAP;
-  /* start the timer */
-  TBCTL |= MC1;
+	/* Select SMCLK clock, and capture on ACLK for TBCCR6 */
+	TBCTL = TBSSEL1 | TBCLR;
+	TBCCTL6 = CCIS0 + CM0 + CAP;
+	/* start the timer */
+	TBCTL |= MC1;
 
-  // wait for next Capture
-  TBCCTL6 &= ~CCIFG;
-  while(!(TBCCTL6 & CCIFG));
-  last = TBCCR6;
+	// wait for next Capture
+	TBCCTL6 &= ~CCIFG;
+	while(!(TBCCTL6 & CCIFG));
+	last = TBCCR6;
 
-  TBCCTL6 &= ~CCIFG;
-  // wait for next Capture - and calculate difference
-  while(!(TBCCTL6 & CCIFG));
-  diff = TBCCR6 - last;
+	TBCCTL6 &= ~CCIFG;
+	// wait for next Capture - and calculate difference
+	while(!(TBCCTL6 & CCIFG));
+	diff = TBCCR6 - last;
 
-  /* Stop timer - conserves energy according to user guide */
-  TBCTL = 0;
+	/* Stop timer - conserves energy according to user guide */
+	TBCTL = 0;
 
-/*   speed = diff; */
-/*   speed = speed * 32768; */
-/*   printf("Last TAR diff:%d target: %ld ", diff, DELTA_2); */
-/*   printf("CPU Speed: %lu DCOCTL: %d\n", speed, DCOCTL); */
+	/*   speed = diff; */
+	/*   speed = speed * 32768; */
+	/*   printf("Last TAR diff:%d target: %ld ", diff, DELTA_2); */
+	/*   printf("CPU Speed: %lu DCOCTL: %d\n", speed, DCOCTL); */
 
-  /* resynchronize the DCO speed if not at target */
-  if(DELTA_2 < diff) {        /* DCO is too fast, slow it down */
-    DCOCTL--;
-    if(DCOCTL == 0xFF) {              /* Did DCO role under? */
-      BCSCTL1--;
-    }
-  } else if (DELTA_2 > diff) {
-    DCOCTL++;
-    if(DCOCTL == 0x00) {              /* Did DCO role over? */
-      BCSCTL1++;
-    }
-  }
+	/* resynchronize the DCO speed if not at target */
+	if(DELTA_2 < diff) {        /* DCO is too fast, slow it down */
+		DCOCTL--;
+		if(DCOCTL == 0xFF) {              /* Did DCO role under? */
+			BCSCTL1--;
+		}
+	} else if (DELTA_2 > diff) {
+		DCOCTL++;
+		if(DCOCTL == 0x00) {              /* Did DCO role over? */
+			BCSCTL1++;
+		}
+	}
 }
 /*---------------------------------------------------------------------------*/

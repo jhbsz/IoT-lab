@@ -12,18 +12,18 @@
 #define BIT_YELLOW 0x01
 
 void leds_arch_init(void) {
-	LED_OUT &= ~(BIT_YELLOW);
-	LED_DIR |= (BIT_YELLOW);
-	LED_SEL &= ~(BIT_YELLOW);
-//	LED_OUT |= (BIT_BLUE | BIT_GREEN | BIT_RED);
+	P1OUT &= ~(BIT_YELLOW);
+	P1DIR |= (BIT_YELLOW);
+	P1SEL &= ~(BIT_YELLOW);
+	P1OUT |= (BIT_YELLOW);
 }
 
 uint8_t leds_arch_get(void) {
-	return (~(LED_OUT)) & 0x07;
+	return (LED_OUT) & 0x01;
 }
 
 void leds_arch_set(uint8_t leds) {
-	if(leds & BIT_YELLOW)
+	if(leds & 0x01)
 		LED_OUT |= BIT_YELLOW;
 	else
 		LED_OUT &= (~BIT_YELLOW);
