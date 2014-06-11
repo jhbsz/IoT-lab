@@ -1,6 +1,18 @@
 Readme
 ======
 
+Update: June 11th, 2014
+
+The Contiki project has been modified to use the MSP-TS430PM64 development board with the MSP430F1611 mcu.
+Board configuration is almost the same as WSN430, what has changed:
+- leds configuration
+- clock configuration
+
+Some other configuration (e.g. UART) has been left untouched, although the board does not use it.
+Future developments involving such (including usage of the radio/network capabilities) functionality would need to configure it correctly.
+
+-------------
+
 Last Update: March 13th, 2012
 Version: v2012-03-21
 
