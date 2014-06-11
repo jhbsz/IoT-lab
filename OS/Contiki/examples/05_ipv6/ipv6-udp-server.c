@@ -27,6 +27,8 @@
  *
  */
 
+#define UIP_CONF_IPV6 1
+
 #include "contiki.h"
 #include "contiki-lib.h"
 #include "contiki-net.h"
@@ -97,18 +99,6 @@ PROCESS_THREAD(udp_server_process, ev, data)
 
 	PROCESS_BEGIN();
 	PRINTF("UDP server started\n");
-
-	//	while (1)
-	//	{
-	//		// we set the timer from here every time
-	//		etimer_set(&timer, CLOCK_CONF_SECOND);
-	//
-	//		// and wait until the vent we receive is the one we're waiting for
-	//		PROCESS_WAIT_EVENT_UNTIL(ev == PROCESS_EVENT_TIMER);
-	//
-	//		// update the LEDs
-	//		leds_toggle(1);
-	//	}
 
 	// wait 3 second, in order to have the IP addresses well configured
 	  etimer_set(&timer, CLOCK_CONF_SECOND*5);
